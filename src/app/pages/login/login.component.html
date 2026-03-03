@@ -1,0 +1,155 @@
+<ion-content>
+    <div class="login-container">
+        <!-- Logo Section -->
+        <div class="logo-section">
+            <div class="icon">📝</div>
+            <h1>Quejas Municipales</h1>
+            <p>Accede a tu cuenta</p>
+        </div>
+
+        <!-- Success Message -->
+        <div class="success-message" [class.show]="successMessage">
+            {{ successMessage }}
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <div class="tab" [class.active]="activeTab === 'login'" (click)="switchTab('login')">Iniciar Sesión</div>
+            <div class="tab" [class.active]="activeTab === 'register'" (click)="switchTab('register')">Registrarse</div>
+        </div>
+
+        <!-- Login Form -->
+        <div class="form-content" [class.active]="activeTab === 'login'">
+            <form [formGroup]="loginForm" (ngSubmit)="handleLogin()">
+                <div class="form-group">
+                    <label for="loginEmail">Correo Electrónico</label>
+                    <div class="input-wrapper">
+                        <input type="email" id="loginEmail" formControlName="email" placeholder="tu@email.com"
+                            autocomplete="email">
+                        <span class="input-icon">📧</span>
+                    </div>
+                    <div class="error-message"
+                        [class.show]="loginForm.get('email')?.touched && loginForm.get('email')?.invalid">
+                        Ingresa un correo electrónico válido
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Contraseña</label>
+                    <div class="input-wrapper">
+                        <input [type]="showLoginPassword ? 'text' : 'password'" id="loginPassword"
+                            formControlName="password" placeholder="••••••••" autocomplete="current-password">
+                        <span class="input-icon">🔒</span>
+                        <span class="password-toggle" (click)="togglePassword('login')">👁️</span>
+                    </div>
+                    <div class="error-message"
+                        [class.show]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid">
+                        La contraseña debe tener al menos 6 caracteres
+                    </div>
+                </div>
+
+                <!-- Error general de login -->
+                <div class="error-message" [class.show]="loginError" style="margin-bottom: 1rem;">
+                    {{ loginError }}
+                </div>
+
+                <button type="submit" class="btn btn-primary" [class.loading]="loginLoading" [disabled]="loginLoading">
+                    <span class="spinner"></span>
+                    <span class="btn-text">Iniciar Sesión</span>
+                </button>
+            </form>
+
+            <div class="divider">
+                <span>o</span>
+            </div>
+
+            <div class="back-link">
+                <a (click)="goToLanding()" style="cursor: pointer;">← Volver al inicio</a>
+            </div>
+        </div>
+
+        <!-- Register Form -->
+        <div class="form-content" [class.active]="activeTab === 'register'">
+            <form [formGroup]="registerForm" (ngSubmit)="handleRegister()">
+                <div class="form-group">
+                    <label for="registerName">Nombre Completo</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="registerName" formControlName="nombre" placeholder="Juan Pérez"
+                            autocomplete="name">
+                        <span class="input-icon">👤</span>
+                    </div>
+                    <div class="error-message"
+                        [class.show]="registerForm.get('nombre')?.touched && registerForm.get('nombre')?.invalid">
+                        El nombre debe tener al menos 3 caracteres
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="registerEmail">Correo Electrónico</label>
+                    <div class="input-wrapper">
+                        <input type="email" id="registerEmail" formControlName="email" placeholder="tu@email.com"
+                            autocomplete="email">
+                        <span class="input-icon">📧</span>
+                    </div>
+                    <div class="error-message"
+                        [class.show]="registerForm.get('email')?.touched && registerForm.get('email')?.invalid">
+                        Correo electrónico inválido
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="registerPhone">Teléfono (Opcional)</label>
+                    <div class="input-wrapper">
+                        <input type="tel" id="registerPhone" formControlName="telefono" placeholder="555-123-4567"
+                            autocomplete="tel">
+                        <span class="input-icon">📱</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="registerPassword">Contraseña</label>
+                    <div class="input-wrapper">
+                        <input [type]="showRegisterPassword ? 'text' : 'password'" id="registerPassword"
+                            formControlName="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+                        <span class="input-icon">🔒</span>
+                        <span class="password-toggle" (click)="togglePassword('register')">👁️</span>
+                    </div>
+                    <div class="error-message"
+                        [class.show]="registerForm.get('password')?.touched && registerForm.get('password')?.invalid">
+                        La contraseña debe tener al menos 6 caracteres
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="registerPasswordConfirm">Confirmar Contraseña</label>
+                    <div class="input-wrapper">
+                        <input [type]="showRegisterPasswordConfirm ? 'text' : 'password'" id="registerPasswordConfirm"
+                            formControlName="passwordConfirm" placeholder="Repite tu contraseña"
+                            autocomplete="new-password">
+                        <span class="input-icon">🔒</span>
+                        <span class="password-toggle" (click)="togglePassword('registerConfirm')">👁️</span>
+                    </div>
+                </div>
+
+                <!-- Error general de registro -->
+                <div class="error-message" [class.show]="registerError" style="margin-bottom: 1rem;">
+                    {{ registerError }}
+                </div>
+
+                <button type="submit" class="btn btn-primary" [class.loading]="registerLoading"
+                    [disabled]="registerLoading">
+                    <span class="spinner"></span>
+                    <span class="btn-text">Crear Cuenta</span>
+                </button>
+            </form>
+
+            <div class="divider">
+                <span>o</span>
+            </div>
+
+            <div class="back-link">
+                <a (click)="goToLanding()" style="cursor: pointer;">← Volver al inicio</a>
+            </div>
+        </div>
+    </div>
+</ion-content>

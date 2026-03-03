@@ -1,0 +1,120 @@
+<ion-content>
+  <header>
+    <nav>
+      <div class="logo">📝 Quejas Municipales</div>
+      <ul class="nav-links">
+        <li><a (click)="scrollTo('inicio')">Inicio</a></li>
+        <li><a (click)="scrollTo('caracteristicas')">Características</a></li>
+        <li><a (click)="scrollTo('como-funciona')">Cómo Funciona</a></li>
+        <li><a (click)="scrollTo('contacto')">Contacto</a></li>
+      </ul>
+      <a (click)="goToLogin()" class="btn-login" style="cursor: pointer;">Iniciar Sesión</a>
+    </nav>
+  </header>
+
+  <section class="hero" id="inicio">
+    <h1>Tu Voz es Importante</h1>
+    <p>Plataforma digital para reportar quejas, sugerencias y peticiones al gobierno municipal</p>
+    <div class="hero-buttons">
+      <a (click)="goToRegister()" class="btn btn-primary" style="cursor: pointer;">Crear Cuenta</a>
+      <a (click)="scrollTo('como-funciona')" class="btn btn-secondary" style="cursor: pointer;">Ver Cómo Funciona</a>
+    </div>
+  </section>
+
+  <section class="features" id="caracteristicas">
+    <h2 class="section-title">¿Por qué usar nuestra plataforma?</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <h3>Fácil de Usar</h3>
+        <p>Reporta problemas desde tu celular o computadora en minutos</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📸</div>
+        <h3>Con Evidencia</h3>
+        <p>Adjunta fotos y documentos PDF del problema</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔔</div>
+        <h3>Seguimiento en Tiempo Real</h3>
+        <p>Recibe notificaciones sobre el estatus de tu reporte</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>Respuesta Rápida</h3>
+        <p>Equipo municipal respondiendo activamente</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="how-it-works" id="como-funciona">
+    <h2 class="section-title">¿Cómo Funciona?</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-number">1</div>
+        <h3>Regístrate</h3>
+        <p>Crea tu cuenta de forma gratuita en segundos</p>
+      </div>
+      <div class="step">
+        <div class="step-number">2</div>
+        <h3>Reporta</h3>
+        <p>Describe el problema y agrega fotos o PDFs</p>
+      </div>
+      <div class="step">
+        <div class="step-number">3</div>
+        <h3>Seguimiento</h3>
+        <p>El equipo municipal revisa y actualiza el estatus</p>
+      </div>
+      <div class="step">
+        <div class="step-number">4</div>
+        <h3>Resolución</h3>
+        <p>Recibe notificación cuando se resuelva tu reporte</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta">
+    <h2>¿Listo para hacer la diferencia?</h2>
+    <p>Únete a cientos de ciudadanos que ya están mejorando su comunidad</p>
+    <a (click)="goToRegister()" class="btn btn-primary" style="cursor: pointer;">Comenzar Ahora</a>
+  </section>
+
+  <footer id="contacto">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Acerca de</h3>
+        <p>Sistema de Quejas Municipales es una plataforma digital para mejorar la comunicación entre ciudadanos y
+          gobierno local.</p>
+      </div>
+      <div class="footer-section">
+        <h3>Enlaces Rápidos</h3>
+        <ul>
+          <li><a href="#">Términos y Condiciones</a></li>
+          <li><a href="#">Política de Privacidad</a></li>
+          <li><a href="#">Preguntas Frecuentes</a></li>
+          <li><a href="#">Soporte</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h3>Contacto</h3>
+        <ul>
+          <li>📧 contacto&#64;quejasmunicipal.gob.mx</li>
+          <li>📞 (55) 1234-5678</li>
+          <li>📍 Presidencia Municipal</li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h3>Categorías</h3>
+        <ul>
+          <li>🚰 Servicios Públicos</li>
+          <li>🏗️ Infraestructura</li>
+          <li>🛡️ Seguridad</li>
+          <li>🌳 Medio Ambiente</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Sistema de Quejas Municipales. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+</ion-content>

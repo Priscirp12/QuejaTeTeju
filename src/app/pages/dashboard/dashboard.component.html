@@ -1,0 +1,283 @@
+<ion-content>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">📝 Quejas Municipales</div>
+            <div class="user-menu">
+                <div class="user-info">
+                    <div class="user-avatar">👤</div>
+                    <span>{{ currentUser?.nombre }}</span>
+                    <span *ngIf="isAdmin" class="admin-badge">Admin</span>
+                </div>
+                <button class="btn-logout" (click)="logout()">Cerrar Sesión</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Welcome Banner -->
+        <div class="welcome-banner">
+            <div class="welcome-text">
+                <h1>Bienvenido/a, {{ currentUser?.nombre }} 👋</h1>
+                <p>{{ isAdmin ? 'Panel de Administración' : 'Administra tus quejas, sugerencias y peticiones' }}</p>
+            </div>
+            <div class="banner-actions">
+                <button *ngIf="isAdmin" class="btn-toggle-view" (click)="toggleAdminView()">
+                    {{ showAdminView ? '👤 Mis Quejas' : '🛡️ Ver Todas (Admin)' }}
+                </button>
+                <button class="btn-new-complaint" (click)="toggleNewQuejaForm()">
+                    {{ showNewQuejaForm ? '✕ Cancelar' : '➕ Nueva Queja' }}
+                </button>
+            </div>
+        </div>
+
+        <!-- Formulario de Nueva Queja -->
+        <div *ngIf="showNewQuejaForm" class="new-queja-form">
+            <h2>📝 Nueva Queja</h2>
+            <form [formGroup]="quejaForm" (ngSubmit)="submitQueja()">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="titulo">Título *</label>
+                        <input type="text" id="titulo" formControlName="titulo"
+                            placeholder="Describe brevemente el problema">
+                        <div class="error-text"
+                            *ngIf="quejaForm.get('titulo')?.touched && quejaForm.get('titulo')?.invalid">
+                            Mínimo 5 caracteres
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="descripcion">Descripción *</label>
+                        <textarea id="descripcion" formControlName="descripcion" rows="4"
+                            placeholder="Detalla el problema, ubicación exacta, desde cuándo sucede, etc."></textarea>
+                        <div class="error-text"
+                            *ngIf="quejaForm.get('descripcion')?.touched && quejaForm.get('descripcion')?.invalid">
+                            Mínimo 10 caracteres
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row two-columns">
+                    <div class="form-group">
+                        <label for="categoria">Categoría *</label>
+                        <select id="categoria" formControlName="categoria">
+                            <option value="">Seleccionar...</option>
+                            <option value="Servicios Públicos">🚰 Servicios Públicos</option>
+                            <option value="Infraestructura">🏗️ Infraestructura</option>
+                            <option value="Seguridad">🛡️ Seguridad</option>
+                            <option value="Medio Ambiente">🌳 Medio Ambiente</option>
+                            <option value="Salud">🏥 Salud</option>
+                            <option value="Transporte">🚌 Transporte</option>
+                            <option value="Otros">📁 Otros</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="tipo">Tipo *</label>
+                        <select id="tipo" formControlName="tipo">
+                            <option value="">Seleccionar...</option>
+                            <option value="Queja">Queja</option>
+                            <option value="Sugerencia">Sugerencia</option>
+                            <option value="Petición">Petición</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row two-columns">
+                    <div class="form-group">
+                        <label for="prioridad">Prioridad</label>
+                        <select id="prioridad" formControlName="prioridad">
+                            <option value="Baja">Baja</option>
+                            <option value="Media">Media</option>
+                            <option value="Alta">Alta</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="ubicacion">Ubicación / Dirección *</label>
+                        <input type="text" id="ubicacion" formControlName="ubicacion_direccion"
+                            placeholder="Calle, número, colonia">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Archivos (fotos, PDFs) — máx. 10MB cada uno</label>
+                        <input type="file" multiple accept="image/*,.pdf" (change)="onFileSelected($event)"
+                            class="file-input">
+                        <div class="file-list" *ngIf="archivosSeleccionados.length > 0">
+                            <div class="file-item" *ngFor="let file of archivosSeleccionados; let i = index">
+                                <span>{{ file.name }} ({{ (file.size / 1024 / 1024).toFixed(2) }} MB)</span>
+                                <button type="button" class="btn-remove-file" (click)="removeFile(i)">✕</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit-queja" [disabled]="quejaForm.invalid || creatingQueja">
+                    {{ creatingQueja ? 'Enviando...' : '📤 Enviar Queja' }}
+                </button>
+            </form>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon">📊</div>
+                </div>
+                <div class="stat-number">{{ estadisticas.total_quejas }}</div>
+                <div class="stat-label">Total de Reportes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon">⏳</div>
+                </div>
+                <div class="stat-number">{{ estadisticas.pendientes }}</div>
+                <div class="stat-label">Pendientes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon">🔄</div>
+                </div>
+                <div class="stat-number">{{ estadisticas.en_proceso }}</div>
+                <div class="stat-label">En Proceso</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon">✅</div>
+                </div>
+                <div class="stat-number">{{ estadisticas.resueltas }}</div>
+                <div class="stat-label">Resueltas</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <span class="filter-label">Filtrar por:</span>
+            <select class="filter-select" [(ngModel)]="filterStatus"
+                (change)="showAdminView ? filterAllQuejas() : filterQuejas()">
+                <option value="">Todos los estados</option>
+                <option value="Pendiente">Pendientes</option>
+                <option value="En Proceso">En Proceso</option>
+                <option value="Resuelta">Resueltas</option>
+                <option value="Rechazada">Rechazadas</option>
+            </select>
+            <select class="filter-select" [(ngModel)]="filterCategory"
+                (change)="showAdminView ? filterAllQuejas() : filterQuejas()">
+                <option value="">Todas las categorías</option>
+                <option value="Servicios Públicos">Servicios Públicos</option>
+                <option value="Infraestructura">Infraestructura</option>
+                <option value="Seguridad">Seguridad</option>
+                <option value="Medio Ambiente">Medio Ambiente</option>
+                <option value="Salud">Salud</option>
+                <option value="Transporte">Transporte</option>
+                <option value="Otros">Otros</option>
+            </select>
+        </div>
+
+        <!-- Admin View: All Complaints -->
+        <div *ngIf="isAdmin && showAdminView" class="complaints-section">
+            <h2>🛡️ Todas las Quejas (Administrador)</h2>
+            <div class="complaints-grid" *ngIf="allQuejas.length > 0">
+                <div class="complaint-card" *ngFor="let queja of allQuejas">
+                    <div class="complaint-header">
+                        <div class="complaint-title">{{ queja.titulo }}</div>
+                        <span class="status-badge" [ngClass]="getStatusClass(queja.estatus)">{{ queja.estatus }}</span>
+                    </div>
+
+                    <div class="complaint-meta">
+                        <div class="meta-item"><span>👤</span><span>{{ queja.usuario_nombre }}</span></div>
+                        <div class="meta-item"><span>📁</span><span>{{ queja.categoria }}</span></div>
+                        <div class="meta-item"><span>📅</span><span>{{ queja.fecha_creacion | date:'dd/MM/yyyy'
+                                }}</span>
+                        </div>
+                        <div class="meta-item"><span>🏷️</span><span>{{ queja.tipo }}</span></div>
+                    </div>
+
+                    <div class="complaint-description">
+                        {{ queja.descripcion.length > 200 ? (queja.descripcion | slice:0:200) + '...' :
+                        queja.descripcion }}
+                    </div>
+
+                    <div class="complaint-footer">
+                        <div class="meta-item"><span>📍</span><span>{{ queja.ubicacion_direccion }}</span></div>
+                    </div>
+
+                    <!-- Admin Actions -->
+                    <div class="admin-actions">
+                        <span class="admin-label">Cambiar a:</span>
+                        <button *ngIf="queja.estatus !== 'En Proceso'" class="btn-status btn-proceso"
+                            (click)="actualizarEstatus(queja.id, 'En Proceso')"
+                            [disabled]="updatingQuejaId === queja.id">
+                            🔄 En Proceso
+                        </button>
+                        <button *ngIf="queja.estatus !== 'Resuelta'" class="btn-status btn-resuelta"
+                            (click)="actualizarEstatus(queja.id, 'Resuelta')" [disabled]="updatingQuejaId === queja.id">
+                            ✅ Resuelta
+                        </button>
+                        <button *ngIf="queja.estatus !== 'Rechazada'" class="btn-status btn-rechazada"
+                            (click)="actualizarEstatus(queja.id, 'Rechazada')"
+                            [disabled]="updatingQuejaId === queja.id">
+                            ❌ Rechazada
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div *ngIf="allQuejas.length === 0" class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <h3>No hay quejas registradas</h3>
+            </div>
+        </div>
+
+        <!-- User View: My Complaints -->
+        <div *ngIf="!showAdminView" class="complaints-section">
+            <h2>📋 Mis Reportes</h2>
+            <div class="complaints-grid" *ngIf="quejas.length > 0">
+                <div class="complaint-card" *ngFor="let queja of quejas">
+                    <div class="complaint-header">
+                        <div class="complaint-title">{{ queja.titulo }}</div>
+                        <span class="status-badge" [ngClass]="getStatusClass(queja.estatus)">{{ queja.estatus }}</span>
+                    </div>
+
+                    <div class="complaint-meta">
+                        <div class="meta-item"><span>📁</span><span>{{ queja.categoria }}</span></div>
+                        <div class="meta-item"><span>📅</span><span>{{ queja.fecha_creacion | date:'dd/MM/yyyy'
+                                }}</span>
+                        </div>
+                        <div class="meta-item"><span>🏷️</span><span>{{ queja.tipo }}</span></div>
+                        <div class="meta-item" *ngIf="queja.total_archivos > 0"><span>📎</span><span>{{
+                                queja.total_archivos
+                                }} archivos</span></div>
+                    </div>
+
+                    <div class="complaint-description">
+                        {{ queja.descripcion.length > 200 ? (queja.descripcion | slice:0:200) + '...' :
+                        queja.descripcion }}
+                    </div>
+
+                    <div class="complaint-footer">
+                        <div class="meta-item"><span>📍</span><span>{{ queja.ubicacion_direccion }}</span></div>
+                        <div class="priority-badge" [ngClass]="'priority-' + queja.prioridad?.toLowerCase()">
+                            {{ queja.prioridad }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div *ngIf="quejas.length === 0 && !loading" class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <h3>No tienes reportes aún</h3>
+                <p>Crea tu primera queja o sugerencia para mejorar tu comunidad</p>
+                <button class="btn-new-complaint" (click)="toggleNewQuejaForm()">➕ Crear Primera Queja</button>
+            </div>
+
+            <!-- Loading -->
+            <div *ngIf="loading" class="loading-state">
+                <p>Cargando tus reportes...</p>
+            </div>
+        </div>
+    </div>
+</ion-content>
