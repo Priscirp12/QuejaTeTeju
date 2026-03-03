@@ -98,8 +98,11 @@ export class QuejasService {
       'Authorization': `Bearer ${this.authService.getToken()}`
     });
 
+    // Use responseType 'text' to receive raw backend output (some PHP warnings
+    // may break JSON parsing). The component will parse JSON safely.
     return this.http.post(`${this.apiUrl}/quejas/crear.php`, formData, {
-      headers: headers
+      headers: headers,
+      responseType: 'text' as 'json'
     });
   }
 

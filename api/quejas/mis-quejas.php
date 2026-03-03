@@ -11,15 +11,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
+// Suprimir warnings/errores para evitar HTML inesperado
+ini_set('display_errors', '0');
+ini_set('display_startup_errors', '0');
+error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
+ob_start();
+
 include_once '../../config/configDatabase.php';
 include_once '../../includes/auth.php';
+
+function send_json($data, $status = 200) {
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
+    http_response_code($status);
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode($data);
+    exit();
+}
 
 // Verificar autenticación
 $user = authenticateUser();
 if (!$user) {
-    http_response_code(401);
-    echo json_encode(array("error" => "No autorizado"));
-    exit();
+    send_json(array("success" => false, "error" => "No autorizado"), 401);
 }
 
 $database = new Database();

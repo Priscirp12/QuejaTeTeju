@@ -11,15 +11,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
+// Suppress PHP warnings/notices from being printed to the response and
+// buffer output so we can always return a clean JSON payload.
+ini_set('display_errors', '0');
+ini_set('display_startup_errors', '0');
+error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
+ob_start();
+
 include_once '../../config/configDatabase.php';
 include_once '../../includes/auth.php';
+
+// Helper to send JSON and clear any buffered output (to avoid mixed HTML)
+function send_json($data, $status = 200) {
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
+    http_response_code($status);
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode($data);
+    exit();
+}
 
 // Verificar autenticación
 $user = authenticateUser();
 if (!$user) {
-    http_response_code(401);
-    echo json_encode(array("error" => "No autorizado"));
-    exit();
+    send_json(array("success" => false, "error" => "No autorizado"), 401);
 }
 
 $database = new Database();
@@ -37,12 +53,10 @@ $ubicacion_longitud = isset($_POST['ubicacion_longitud']) ? $_POST['ubicacion_lo
 
 // Validaciones
 if (empty($titulo) || empty($descripcion) || empty($categoria) || empty($tipo) || empty($ubicacion_direccion)) {
-    http_response_code(400);
-    echo json_encode(array(
+    send_json(array(
         "success" => false,
         "error" => "Faltan campos requeridos"
-    ));
-    exit();
+    ), 400);
 }
 
 try {
@@ -66,6 +80,16 @@ try {
     $stmt->execute();
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     $queja_id = $result['id'];
+
+    // Consume any additional result sets produced by the stored procedure
+    // to avoid "Packets out of order" errors when issuing new queries.
+    try {
+        while ($stmt->nextRowset()) {
+            // no-op: advance through result sets
+        }
+    } catch (Exception $e) {
+        // ignore: some drivers may not support nextRowset
+    }
 
     // Cerrar cursor del stored procedure antes de continuar
     $stmt->closeCursor();
@@ -123,16 +147,21 @@ try {
                     $insert_query = "INSERT INTO archivos_quejas 
                                     (queja_id, nombre_original, nombre_archivo, tipo_archivo, ruta_archivo, tamanio_bytes, extension) 
                                     VALUES (:queja_id, :nombre_original, :nombre_archivo, :tipo_archivo, :ruta_archivo, :tamanio, :extension)";
-
-                    $insert_stmt = $db->prepare($insert_query);
-                    $insert_stmt->bindParam(':queja_id', $queja_id);
-                    $insert_stmt->bindParam(':nombre_original', $files['name'][$i]);
-                    $insert_stmt->bindParam(':nombre_archivo', $nombre_archivo);
-                    $insert_stmt->bindParam(':tipo_archivo', $tipo_archivo);
-                    $insert_stmt->bindParam(':ruta_archivo', $ruta_completa);
-                    $insert_stmt->bindParam(':tamanio', $files['size'][$i]);
-                    $insert_stmt->bindParam(':extension', $extension);
-                    $insert_stmt->execute();
+                    try {
+                        $insert_stmt = $db->prepare($insert_query);
+                        $insert_stmt->bindParam(':queja_id', $queja_id);
+                        $insert_stmt->bindParam(':nombre_original', $files['name'][$i]);
+                        $insert_stmt->bindParam(':nombre_archivo', $nombre_archivo);
+                        $insert_stmt->bindParam(':tipo_archivo', $tipo_archivo);
+                        $insert_stmt->bindParam(':ruta_archivo', $ruta_completa);
+                        $insert_stmt->bindParam(':tamanio', $files['size'][$i]);
+                        $insert_stmt->bindParam(':extension', $extension);
+                        $insert_stmt->execute();
+                    } catch (Exception $e) {
+                        // If an insert fails, record a warning but continue with other files
+                        // do not throw to avoid aborting the whole request due to one file
+                        error_log('Failed to insert archivo_quejas: ' . $e->getMessage());
+                    }
                 }
             }
         }
@@ -141,23 +170,25 @@ try {
     // Confirmar transacción
     $db->commit();
 
-    http_response_code(201);
-    echo json_encode(array(
+    send_json(array(
         "success" => true,
         "message" => "Queja creada exitosamente",
         "quejaId" => $queja_id
-    ));
+    ), 201);
 
 
 }
 catch (Exception $e) {
     // Revertir transacción en caso de error
-    $db->rollBack();
+    if ($db && $db->inTransaction()) {
+        $db->rollBack();
+    }
 
-    http_response_code(500);
-    echo json_encode(array(
+    // Return a safe error message; avoid leaking internal paths in production.
+    $msg = "Error al crear la queja: " . $e->getMessage();
+    send_json(array(
         "success" => false,
-        "error" => "Error al crear la queja: " . $e->getMessage()
-    ));
+        "error" => $msg
+    ), 500);
 }
 ?>

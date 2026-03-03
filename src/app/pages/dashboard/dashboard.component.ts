@@ -168,9 +168,20 @@ export class DashboardComponent implements OnInit {
     this.creatingQueja = true;
 
     this.quejasService.crearQueja(this.quejaForm.value, this.archivosSeleccionados).subscribe({
-      next: async (res: any) => {
+      next: async (raw: any) => {
         this.creatingQueja = false;
-        if (res.success) {
+        // service returns raw text; try to parse JSON safely
+        let body: any = raw;
+        if (typeof raw === 'string') {
+          try {
+            body = JSON.parse(raw);
+          } catch (e) {
+            console.warn('crearQueja: failed to parse response as JSON, raw=', raw);
+            body = { success: false, error: 'Respuesta inválida del servidor' };
+          }
+        }
+
+        if (body && body.success) {
           this.showNewQuejaForm = false;
           this.quejaForm.reset({ prioridad: 'Media' });
           this.archivosSeleccionados = [];
@@ -190,12 +201,20 @@ export class DashboardComponent implements OnInit {
             position: 'top'
           });
           toast.present();
+        } else {
+          console.error('Error creating queja:', body);
+          const toast = await this.toastController.create({
+            message: `❌ Error al crear la queja: ${body.error || body.message || 'Error desconocido'}`,
+            duration: 5000,
+            color: 'danger',
+            position: 'top'
+          });
+          toast.present();
         }
       },
       error: async (err) => {
         this.creatingQueja = false;
-        // show user-friendly message and log full error to console for debugging
-        console.error('Error creating queja:', err);
+        console.error('Network or HTTP error creating queja:', err);
         const backendMsg = err?.error?.error || err?.message || JSON.stringify(err);
         const toast = await this.toastController.create({
           message: `❌ Error al crear la queja: ${backendMsg}`,
