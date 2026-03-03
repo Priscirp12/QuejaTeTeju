@@ -2,60 +2,42 @@
 // includes/auth.php
 // Funciones de autenticación
 
-// Apache's getallheaders() is not available on all servers (e.g. nginx/fastcgi),
-// so provide a fallback that inspects $_SERVER variables.
-if (!function_exists('getallheaders')) {
-    function getallheaders()
-    {
-        $headers = [];
-        foreach ($_SERVER as $name => $value) {
-            if (strpos($name, 'HTTP_') === 0) {
-                $key = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))));
-                $headers[$key] = $value;
-            }
-        }
-        return $headers;
-    }
-}
-
-function authenticateUser()
-{
+function authenticateUser() {
     $headers = getallheaders();
-
-    if (!isset($headers['Authorization'])) {
+    
+    if(!isset($headers['Authorization'])) {
         return false;
     }
-
+    
     $auth_header = $headers['Authorization'];
     $token = str_replace('Bearer ', '', $auth_header);
-
+    
     // Decodificar token simple
     $decoded = base64_decode($token);
     $parts = explode(':', $decoded);
-
-    if (count($parts) >= 1) {
+    
+    if(count($parts) >= 1) {
         $user_id = $parts[0];
-
+        
         // Verificar que el usuario existe
-        include_once __DIR__ . '/../config/configDatabase.php';
+        include_once __DIR__ . '/../config/database.php';
         $database = new Database();
         $db = $database->getConnection();
-
+        
         $query = "SELECT id, nombre, email, rol FROM usuarios WHERE id = :id AND activo = 1 LIMIT 1";
         $stmt = $db->prepare($query);
         $stmt->bindParam(":id", $user_id);
         $stmt->execute();
-
-        if ($stmt->rowCount() > 0) {
+        
+        if($stmt->rowCount() > 0) {
             return $stmt->fetch(PDO::FETCH_ASSOC);
         }
     }
-
+    
     return false;
 }
 
-function isAdmin($user)
-{
+function isAdmin($user) {
     return $user && $user['rol'] === 'admin';
 }
 ?>

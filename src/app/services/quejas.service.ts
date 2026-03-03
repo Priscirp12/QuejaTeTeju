@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 export interface Queja {
   id: number;
@@ -33,7 +34,7 @@ export interface Estadisticas {
   providedIn: 'root'
 })
 export class QuejasService {
-  private apiUrl = '/PETICIONES/backend/api';
+  private apiUrl = environment.apiUrl; // '/api' via proxy or same origin
 
   constructor(
     private http: HttpClient,

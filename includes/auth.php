@@ -2,22 +2,6 @@
 // includes/auth.php
 // Funciones de autenticación
 
-// Apache's getallheaders() is not available on all servers (e.g. nginx/fastcgi),
-// so provide a fallback that inspects $_SERVER variables.
-if (!function_exists('getallheaders')) {
-    function getallheaders()
-    {
-        $headers = [];
-        foreach ($_SERVER as $name => $value) {
-            if (strpos($name, 'HTTP_') === 0) {
-                $key = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))));
-                $headers[$key] = $value;
-            }
-        }
-        return $headers;
-    }
-}
-
 function authenticateUser()
 {
     $headers = getallheaders();

@@ -1,8 +1,12 @@
 {
-    "/PETICIONES": {
-        "target": "http://localhost",
-        "secure": false,
-        "changeOrigin": true,
-        "logLevel": "debug"
-    }
+  // during `ng serve` calls made to /api will be forwarded to the PHP backend located
+  // under the PETICIONES folder. the proxy configuration strips the leading "/api"
+  // prefix and makes the request to http://localhost/PETICIONES/api/...
+  "/api": {
+    "target": "http://localhost/PETICIONES",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": { "^/api": "/api" }
+  }
 }

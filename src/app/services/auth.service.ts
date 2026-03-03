@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 export interface User {
   id: number;
@@ -30,8 +31,8 @@ export interface RegisterData {
   providedIn: 'root'
 })
 export class AuthService {
-  // Cambiado a ruta relativa para que el proxy de Angular (proxy.conf.json) lo intercepte y maneje el CORS
-  private apiUrl = '/PETICIONES/backend/api';
+  // use environment variable so it can be switched between dev/prod
+  private apiUrl = environment.apiUrl; // e.g. '/api' (proxied)
   private currentUserSubject: BehaviorSubject<User | null>;
   public currentUser: Observable<User | null>;
 
@@ -92,9 +93,12 @@ export class AuthService {
 
   getAuthHeaders(): HttpHeaders {
     const token = this.getToken();
-    return new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+    let headers = new HttpHeaders({
+      'Content-Type': 'application/json'
     });
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    return headers;
   }
 }

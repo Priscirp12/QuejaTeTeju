@@ -3,7 +3,11 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false,
+  // during development we directly hit the WAMP backend. Adjust host/port if necessary.
+  // you can also use the proxy setup (see proxy.conf.json) by setting this to '/api',
+  // but if you have trouble with 404s you may prefer the explicit absolute URL below.
+  apiUrl: 'http://localhost/PETICIONES/api'
 };
 
 /*
