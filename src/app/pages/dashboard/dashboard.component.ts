@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -53,6 +53,8 @@ export class DashboardComponent implements OnInit {
     private alertController: AlertController,
     private toastController: ToastController
   ) { }
+
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
   ngOnInit() {
     this.currentUser = this.authService.getCurrentUser();
@@ -145,9 +147,12 @@ export class DashboardComponent implements OnInit {
 
   onFileSelected(event: any) {
     const files: FileList = event.target.files;
-    this.archivosSeleccionados = [];
+    // Append selected files to existing selection instead of replacing it
     for (let i = 0; i < files.length; i++) {
-      this.archivosSeleccionados.push(files[i]);
+      const f = files[i];
+      // avoid adding duplicates by name+size
+      const exists = this.archivosSeleccionados.some(a => a.name === f.name && a.size === f.size);
+      if (!exists) this.archivosSeleccionados.push(f);
     }
   }
 
@@ -169,6 +174,14 @@ export class DashboardComponent implements OnInit {
           this.showNewQuejaForm = false;
           this.quejaForm.reset({ prioridad: 'Media' });
           this.archivosSeleccionados = [];
+          // reset native file input element so the same files can be re-selected later
+          try {
+            if (this.fileInput && this.fileInput.nativeElement) {
+              this.fileInput.nativeElement.value = '';
+            }
+          } catch (e) {
+            // ignore if ViewChild not available in some test scenarios
+          }
           this.loadData();
           const toast = await this.toastController.create({
             message: '✅ Queja creada exitosamente',
@@ -181,9 +194,12 @@ export class DashboardComponent implements OnInit {
       },
       error: async (err) => {
         this.creatingQueja = false;
+        // show user-friendly message and log full error to console for debugging
+        console.error('Error creating queja:', err);
+        const backendMsg = err?.error?.error || err?.message || JSON.stringify(err);
         const toast = await this.toastController.create({
-          message: '❌ Error al crear la queja',
-          duration: 3000,
+          message: `❌ Error al crear la queja: ${backendMsg}`,
+          duration: 5000,
           color: 'danger',
           position: 'top'
         });

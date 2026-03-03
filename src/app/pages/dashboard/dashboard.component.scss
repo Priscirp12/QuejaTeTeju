@@ -207,6 +207,9 @@
   transition: all 0.3s;
   outline: none;
   font-family: inherit;
+  /* Ensure text is visible even when a global dark palette is imported */
+  color: #333;
+  -webkit-text-fill-color: #333;
 }
 
 .form-group input:focus,
