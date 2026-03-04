@@ -51,17 +51,32 @@ if (!empty($data->email) && !empty($data->password)) {
 
         // Verificar si el usuario está activo
         if ($row['activo'] != 1) {
-            http_response_code(403);
-            echo json_encode(array(
-                "success" => false,
-                "error" => "Usuario inactivo. Contacte al administrador"
-            ));
-            exit();
+            send_json(array("success" => false, "error" => "Usuario inactivo. Contacte al administrador"), 403);
         }
 
-        // Verificar contraseña
-        if (password_verify($data->password, $row['password'])) {
+        // Verificar contraseña — soportar migración desde contraseñas en texto plano:
+        $provided = isset($data->password) ? $data->password : '';
+        $stored = $row['password'];
+        $login_ok = false;
 
+        if (!empty($stored) && password_verify($provided, $stored)) {
+            $login_ok = true;
+        } elseif ($provided === $stored) {
+            // Legacy plain-text password — migrate to bcrypt hash
+            try {
+                $new_hash = password_hash($provided, PASSWORD_BCRYPT);
+                $update_pw_q = "UPDATE usuarios SET password = :password WHERE id = :id";
+                $up = $db->prepare($update_pw_q);
+                $up->bindParam(':password', $new_hash);
+                $up->bindParam(':id', $row['id']);
+                $up->execute();
+            } catch (Exception $e) {
+                // ignore update failures but allow login to proceed
+            }
+            $login_ok = true;
+        }
+
+        if ($login_ok) {
             // Actualizar última sesión
             $update_query = "UPDATE usuarios SET ultima_sesion = NOW() WHERE id = :id";
             $update_stmt = $db->prepare($update_query);
@@ -72,8 +87,7 @@ if (!empty($data->email) && !empty($data->password)) {
             $token = base64_encode($row['id'] . ':' . time() . ':' . md5($row['email']));
 
             // Respuesta exitosa
-            http_response_code(200);
-            echo json_encode(array(
+            send_json(array(
                 "success" => true,
                 "message" => "Login exitoso",
                 "token" => $token,
@@ -84,14 +98,9 @@ if (!empty($data->email) && !empty($data->password)) {
                     "telefono" => $row['telefono'],
                     "rol" => $row['rol']
                 )
-            ));
-        }
-        else {
-            http_response_code(401);
-            echo json_encode(array(
-                "success" => false,
-                "error" => "Email o contraseña incorrectos"
-            ));
+            ), 200);
+        } else {
+            send_json(array("success" => false, "error" => "Email o contraseña incorrectos"), 401);
         }
     }
     else {

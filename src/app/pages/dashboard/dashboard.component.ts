@@ -37,13 +37,16 @@ export class DashboardComponent implements OnInit {
   // Admin
   isAdmin = false;
   allQuejas: any[] = [];
-  showAdminView = false;
+  quejasArchivos: { [quejaId: number]: any[] } = {}; // Cache de archivos por queja
 
   // Estado de carga
   loading = true;
 
   // Actualización de estatus (admin)
   updatingQuejaId: number | null = null;
+
+  // Modal de imagen
+  selectedImage: any = null;
 
   constructor(
     private authService: AuthService,
@@ -137,12 +140,46 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  loadArchivosPorQueja(quejaId: number) {
+    // Si ya tenemos los archivos en caché, no cargar de nuevo
+    if (this.quejasArchivos[quejaId]) {
+      return;
+    }
+
+    this.quejasService.getArchivos(quejaId).subscribe({
+      next: (res: any) => {
+        if (res.success) {
+          this.quejasArchivos[quejaId] = res.archivos || [];
+        }
+      },
+      error: (err) => {
+        console.error('Error loading files for complaint:', err);
+        this.quejasArchivos[quejaId] = [];
+      }
+    });
+  }
+
+  toggleArchivosPorQueja(queja: any) {
+    queja.showArchivos = !queja.showArchivos;
+    if (queja.showArchivos) {
+      this.loadArchivosPorQueja(queja.id);
+    }
+  }
+
   toggleNewQuejaForm() {
     this.showNewQuejaForm = !this.showNewQuejaForm;
     if (!this.showNewQuejaForm) {
       this.quejaForm.reset({ prioridad: 'Media' });
       this.archivosSeleccionados = [];
     }
+  }
+
+  openImage(archivo: any) {
+    this.selectedImage = archivo;
+  }
+
+  closeImageModal() {
+    this.selectedImage = null;
   }
 
   onFileSelected(event: any) {
@@ -276,9 +313,6 @@ export class DashboardComponent implements OnInit {
     await alert.present();
   }
 
-  toggleAdminView() {
-    this.showAdminView = !this.showAdminView;
-  }
 
   getStatusClass(estatus: string): string {
     const statusMap: { [key: string]: string } = {

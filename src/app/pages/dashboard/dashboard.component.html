@@ -23,17 +23,14 @@
                 <p>{{ isAdmin ? 'Panel de Administración' : 'Administra tus quejas, sugerencias y peticiones' }}</p>
             </div>
             <div class="banner-actions">
-                <button *ngIf="isAdmin" class="btn-toggle-view" (click)="toggleAdminView()">
-                    {{ showAdminView ? '👤 Mis Quejas' : '🛡️ Ver Todas (Admin)' }}
-                </button>
-                <button class="btn-new-complaint" (click)="toggleNewQuejaForm()">
+                <button *ngIf="!isAdmin" class="btn-new-complaint" (click)="toggleNewQuejaForm()">
                     {{ showNewQuejaForm ? '✕ Cancelar' : '➕ Nueva Queja' }}
                 </button>
             </div>
         </div>
 
         <!-- Formulario de Nueva Queja -->
-        <div *ngIf="showNewQuejaForm" class="new-queja-form">
+        <div *ngIf="showNewQuejaForm && !isAdmin" class="new-queja-form">
             <h2>📝 Nueva Queja</h2>
             <form [formGroup]="quejaForm" (ngSubmit)="submitQueja()">
                 <div class="form-row">
@@ -157,7 +154,7 @@
         <div class="filters">
             <span class="filter-label">Filtrar por:</span>
             <select class="filter-select" [(ngModel)]="filterStatus"
-                (change)="showAdminView ? filterAllQuejas() : filterQuejas()">
+                (change)="isAdmin ? filterAllQuejas() : filterQuejas()">
                 <option value="">Todos los estados</option>
                 <option value="Pendiente">Pendientes</option>
                 <option value="En Proceso">En Proceso</option>
@@ -165,7 +162,7 @@
                 <option value="Rechazada">Rechazadas</option>
             </select>
             <select class="filter-select" [(ngModel)]="filterCategory"
-                (change)="showAdminView ? filterAllQuejas() : filterQuejas()">
+                (change)="isAdmin ? filterAllQuejas() : filterQuejas()">
                 <option value="">Todas las categorías</option>
                 <option value="Servicios Públicos">Servicios Públicos</option>
                 <option value="Infraestructura">Infraestructura</option>
@@ -178,7 +175,7 @@
         </div>
 
         <!-- Admin View: All Complaints -->
-        <div *ngIf="isAdmin && showAdminView" class="complaints-section">
+        <div *ngIf="isAdmin" class="complaints-section">
             <h2>🛡️ Todas las Quejas (Administrador)</h2>
             <div class="complaints-grid" *ngIf="allQuejas.length > 0">
                 <div class="complaint-card" *ngFor="let queja of allQuejas">
@@ -203,6 +200,50 @@
 
                     <div class="complaint-footer">
                         <div class="meta-item"><span>📍</span><span>{{ queja.ubicacion_direccion }}</span></div>
+                    </div>
+
+                    <!-- Archivos -->
+                    <div class="archivos-section" *ngIf="queja.total_archivos > 0">
+                        <button class="btn-toggle-archivos" (click)="toggleArchivosPorQueja(queja)">
+                            {{ queja.showArchivos ? '📁 Ocultar archivos' : '📎 Ver archivos (' + queja.total_archivos + ')' }}
+                        </button>
+                        
+                        <div class="archivos-list" *ngIf="queja.showArchivos && quejasArchivos[queja.id]">
+                            <div class="archivo-item" *ngFor="let archivo of quejasArchivos[queja.id]">
+                                <!-- Imagen -->
+                                <div *ngIf="archivo.tipo_archivo === 'imagen'" class="archivo-imagen">
+                                    <img [src]="archivo.ruta_archivo" 
+                                         [alt]="archivo.nombre_original"
+                                         class="archivo-preview"
+                                         (click)="openImage(archivo)">
+                                    <div class="archivo-info">
+                                        <span class="archivo-nombre">{{ archivo.nombre_original }}</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- PDF -->
+                                <div *ngIf="archivo.tipo_archivo === 'pdf'" class="archivo-pdf">
+                                    <div class="pdf-icon">📄</div>
+                                    <div class="archivo-info">
+                                        <span class="archivo-nombre">{{ archivo.nombre_original }}</span>
+                                        <a [href]="archivo.ruta_archivo" target="_blank" class="btn-open-pdf">
+                                            🔗 Abrir
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <!-- Otros -->
+                                <div *ngIf="archivo.tipo_archivo === 'otro'" class="archivo-otro">
+                                    <div class="otro-icon">📎</div>
+                                    <div class="archivo-info">
+                                        <span class="archivo-nombre">{{ archivo.nombre_original }}</span>
+                                        <a [href]="archivo.ruta_archivo" download class="btn-download">
+                                            ⬇️ Descargar
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Admin Actions -->
@@ -232,7 +273,7 @@
         </div>
 
         <!-- User View: My Complaints -->
-        <div *ngIf="!showAdminView" class="complaints-section">
+        <div *ngIf="!isAdmin" class="complaints-section">
             <h2>📋 Mis Reportes</h2>
             <div class="complaints-grid" *ngIf="quejas.length > 0">
                 <div class="complaint-card" *ngFor="let queja of quejas">
@@ -271,13 +312,24 @@
                 <div class="empty-state-icon">📭</div>
                 <h3>No tienes reportes aún</h3>
                 <p>Crea tu primera queja o sugerencia para mejorar tu comunidad</p>
-                <button class="btn-new-complaint" (click)="toggleNewQuejaForm()">➕ Crear Primera Queja</button>
+                <button *ngIf="!isAdmin" class="btn-new-complaint" (click)="toggleNewQuejaForm()">➕ Crear Primera Queja</button>
             </div>
 
             <!-- Loading -->
             <div *ngIf="loading" class="loading-state">
                 <p>Cargando tus reportes...</p>
             </div>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div *ngIf="selectedImage" class="image-modal-overlay" (click)="closeImageModal()">
+        <div class="image-modal-content" (click)="$event.stopPropagation()">
+            <button class="btn-close-modal" (click)="closeImageModal()">✕</button>
+            <img [src]="selectedImage.ruta_archivo" 
+                 [alt]="selectedImage.nombre_original"
+                 class="modal-image">
+            <div class="modal-image-name">{{ selectedImage.nombre_original }}</div>
         </div>
     </div>
 </ion-content>

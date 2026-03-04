@@ -177,4 +177,13 @@ export class QuejasService {
       params: params
     });
   }
+
+  /**
+   * Obtener archivos de una queja
+   */
+  getArchivos(quejaId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/quejas/archivos.php?queja_id=${quejaId}`, {
+      headers: this.getHeaders()
+    });
+  }
 }

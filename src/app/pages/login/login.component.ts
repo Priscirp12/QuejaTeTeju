@@ -79,6 +79,10 @@ export class LoginComponent implements OnInit {
       return;
     }
 
+    // clear any previous user/token before attempting login so stale admin role
+    // doesn't persist across sessions
+    this.authService.logout();
+
     this.loginLoading = true;
     this.loginError = '';
 
@@ -86,6 +90,7 @@ export class LoginComponent implements OnInit {
 
     this.authService.login(email, password).subscribe({
       next: (response) => {
+        console.log('login response', response); // debug role/usuario
         this.loginLoading = false;
         if (response.success) {
           this.router.navigate(['/dashboard']);
@@ -94,6 +99,7 @@ export class LoginComponent implements OnInit {
         }
       },
       error: (err) => {
+        console.error('login error', err);
         this.loginLoading = false;
         this.loginError = err.error?.error || 'Email o contraseña incorrectos';
       }
