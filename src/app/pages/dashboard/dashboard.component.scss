@@ -333,6 +333,9 @@
   gap: 1rem;
   flex-wrap: wrap;
   align-items: center;
+  position: relative;
+  z-index: 10;
+  overflow: visible;
 }
 
 .filter-label {
@@ -348,10 +351,20 @@
   cursor: pointer;
   outline: none;
   transition: border-color 0.3s;
+  position: relative;
+  z-index: 11;
+  color: #000;
+  background-color: white;
+}
+
+.filter-select option {
+  color: #000;
+  background-color: white;
 }
 
 .filter-select:focus {
   border-color: #667eea;
+  z-index: 20;
 }
 
 /* Complaints List */

@@ -25,13 +25,20 @@ if (!$user) {
 $database = new Database();
 $db = $database->getConnection();
 
-// Obtener estadísticas del usuario
-$query = "SELECT * FROM vista_estadisticas_usuario WHERE usuario_id = :usuario_id";
-$stmt = $db->prepare($query);
-$stmt->bindParam(':usuario_id', $user['id']);
-$stmt->execute();
-
-$estadisticas = $stmt->fetch(PDO::FETCH_ASSOC);
+// Si es administrador, devolver estadísticas globales (todas las quejas)
+if ($user['rol'] === 'admin') {
+    $query = "SELECT * FROM vista_estadisticas_generales";
+    $stmt = $db->prepare($query);
+    $stmt->execute();
+    $estadisticas = $stmt->fetch(PDO::FETCH_ASSOC);
+} else {
+    // Obtener estadísticas del usuario
+    $query = "SELECT * FROM vista_estadisticas_usuario WHERE usuario_id = :usuario_id";
+    $stmt = $db->prepare($query);
+    $stmt->bindParam(':usuario_id', $user['id']);
+    $stmt->execute();
+    $estadisticas = $stmt->fetch(PDO::FETCH_ASSOC);
+}
 
 if (!$estadisticas) {
     $estadisticas = array(

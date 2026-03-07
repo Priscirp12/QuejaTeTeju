@@ -54,6 +54,13 @@ if (!empty($data->email) && !empty($data->password)) {
             send_json(array("success" => false, "error" => "Usuario inactivo. Contacte al administrador"), 403);
         }
 
+        // Asegurar que sólo el admin conocido funcione como rol 'admin'
+        // (evita que cuentas nuevas o mal configuradas se vuelvan administradores)
+        $adminEmail = 'admin@municipal.gob.mx';
+        if (strtolower($row['email']) !== strtolower($adminEmail)) {
+            $row['rol'] = 'ciudadano';
+        }
+
         // Verificar contraseña — soportar migración desde contraseñas en texto plano:
         $provided = isset($data->password) ? $data->password : '';
         $stored = $row['password'];

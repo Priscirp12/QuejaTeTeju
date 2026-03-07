@@ -54,8 +54,10 @@ if (!empty($data->email) && !empty($data->password)) {
             send_json(array("success" => false, "error" => "Usuario inactivo. Contacte al administrador"), 403);
         }
 
-        // Normalize role: anything other than explicit 'admin' becomes ciudadano
-        if ($row['rol'] !== 'admin') {
+        // Asegurar que sólo el admin conocido funcione como rol 'admin'
+        // (evita que cuentas nuevas o mal configuradas se vuelvan administradores)
+        $adminEmail = 'admin@municipal.gob.mx';
+        if (strtolower($row['email']) !== strtolower($adminEmail)) {
             $row['rol'] = 'ciudadano';
         }
 
