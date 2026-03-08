@@ -20,6 +20,10 @@ export interface Queja {
   fecha_creacion: string;
   fecha_actualizacion: string;
   total_archivos: number;
+
+  // UI state helpers
+  showArchivos?: boolean;
+  showComentarios?: boolean;
 }
 
 export interface Estadisticas {
@@ -183,6 +187,15 @@ export class QuejasService {
    */
   getArchivos(quejaId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/quejas/archivos.php?queja_id=${quejaId}`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  /**
+   * Obtener comentarios de historial para una queja (admin + usuario)
+   */
+  getComentarios(quejaId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/quejas/historial.php?queja_id=${quejaId}`, {
       headers: this.getHeaders()
     });
   }

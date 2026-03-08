@@ -174,32 +174,32 @@
             </select>
         </div>
 
-        <!-- Admin View: All Complaints -->
-        <div *ngIf="isAdmin" class="complaints-section">
-            <h2>🛡️ Todas las Quejas (Administrador)</h2>
-            <div class="complaints-grid" *ngIf="allQuejas.length > 0">
-                <div class="complaint-card" *ngFor="let queja of allQuejas">
+        <!-- User View: My Complaints -->
+        <div *ngIf="!isAdmin" class="complaints-section">
+            <h2>📝 Mis Quejas</h2>
+            <div class="complaints-grid" *ngIf="quejas.length > 0">
+                <div class="complaint-card" *ngFor="let queja of quejas">
                     <div class="complaint-header">
                         <div class="complaint-title">{{ queja.titulo }}</div>
                         <span class="status-badge" [ngClass]="getStatusClass(queja.estatus)">{{ queja.estatus }}</span>
                     </div>
 
                     <div class="complaint-meta">
-                        <div class="meta-item"><span>👤</span><span>{{ queja.usuario_nombre }}</span></div>
                         <div class="meta-item"><span>📁</span><span>{{ queja.categoria }}</span></div>
-                        <div class="meta-item"><span>📅</span><span>{{ queja.fecha_creacion | date:'dd/MM/yyyy'
-                                }}</span>
-                        </div>
+                        <div class="meta-item"><span>📅</span><span>{{ queja.fecha_creacion | date:'dd/MM/yyyy' }}</span></div>
                         <div class="meta-item"><span>🏷️</span><span>{{ queja.tipo }}</span></div>
+                        <div class="meta-item" *ngIf="queja.total_archivos > 0"><span>📎</span><span>{{ queja.total_archivos }} archivos</span></div>
                     </div>
 
                     <div class="complaint-description">
-                        {{ queja.descripcion.length > 200 ? (queja.descripcion | slice:0:200) + '...' :
-                        queja.descripcion }}
+                        {{ queja.descripcion.length > 200 ? (queja.descripcion | slice:0:200) + '...' : queja.descripcion }}
                     </div>
 
                     <div class="complaint-footer">
                         <div class="meta-item"><span>📍</span><span>{{ queja.ubicacion_direccion }}</span></div>
+                        <div class="priority-badge" [ngClass]="'priority-' + queja.prioridad.toLowerCase()">
+                            {{ queja.prioridad }}
+                        </div>
                     </div>
 
                     <!-- Archivos -->
@@ -207,7 +207,7 @@
                         <button class="btn-toggle-archivos" (click)="toggleArchivosPorQueja(queja)">
                             {{ queja.showArchivos ? '📁 Ocultar archivos' : '📎 Ver archivos (' + queja.total_archivos + ')' }}
                         </button>
-                        
+
                         <div class="archivos-list" *ngIf="queja.showArchivos && quejasArchivos[queja.id]">
                             <div class="archivo-item" *ngFor="let archivo of quejasArchivos[queja.id]">
                                 <!-- Imagen -->
@@ -220,7 +220,7 @@
                                         <span class="archivo-nombre">{{ archivo.nombre_original }}</span>
                                     </div>
                                 </div>
-                                
+
                                 <!-- PDF -->
                                 <div *ngIf="archivo.tipo_archivo === 'pdf'" class="archivo-pdf">
                                     <div class="pdf-icon">📄</div>
@@ -246,62 +246,27 @@
                         </div>
                     </div>
 
-                    <!-- Admin Actions -->
-                    <div class="admin-actions">
-                        <span class="admin-label">Cambiar a:</span>
-                        <button *ngIf="queja.estatus !== 'En Proceso'" class="btn-status btn-proceso"
-                            (click)="actualizarEstatus(queja.id, 'En Proceso')"
-                            [disabled]="updatingQuejaId === queja.id">
-                            🔄 En Proceso
+                    <!-- Comentarios -->
+                    <div class="comentarios-section">
+                        <button class="btn-toggle-comentarios" (click)="toggleComentariosPorQueja(queja)">
+                            {{ queja.showComentarios ? '💬 Ocultar comentarios' : '💬 Ver comentarios' }}
                         </button>
-                        <button *ngIf="queja.estatus !== 'Resuelta'" class="btn-status btn-resuelta"
-                            (click)="actualizarEstatus(queja.id, 'Resuelta')" [disabled]="updatingQuejaId === queja.id">
-                            ✅ Resuelta
-                        </button>
-                        <button *ngIf="queja.estatus !== 'Rechazada'" class="btn-status btn-rechazada"
-                            (click)="actualizarEstatus(queja.id, 'Rechazada')"
-                            [disabled]="updatingQuejaId === queja.id">
-                            ❌ Rechazada
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div *ngIf="allQuejas.length === 0" class="empty-state">
-                <div class="empty-state-icon">📭</div>
-                <h3>No hay quejas registradas</h3>
-            </div>
-        </div>
 
-        <!-- User View: My Complaints -->
-        <div *ngIf="!isAdmin" class="complaints-section">
-            <h2>📋 Mis Reportes</h2>
-            <div class="complaints-grid" *ngIf="quejas.length > 0">
-                <div class="complaint-card" *ngFor="let queja of quejas">
-                    <div class="complaint-header">
-                        <div class="complaint-title">{{ queja.titulo }}</div>
-                        <span class="status-badge" [ngClass]="getStatusClass(queja.estatus)">{{ queja.estatus }}</span>
-                    </div>
-
-                    <div class="complaint-meta">
-                        <div class="meta-item"><span>📁</span><span>{{ queja.categoria }}</span></div>
-                        <div class="meta-item"><span>📅</span><span>{{ queja.fecha_creacion | date:'dd/MM/yyyy'
-                                }}</span>
-                        </div>
-                        <div class="meta-item"><span>🏷️</span><span>{{ queja.tipo }}</span></div>
-                        <div class="meta-item" *ngIf="queja.total_archivos > 0"><span>📎</span><span>{{
-                                queja.total_archivos
-                                }} archivos</span></div>
-                    </div>
-
-                    <div class="complaint-description">
-                        {{ queja.descripcion.length > 200 ? (queja.descripcion | slice:0:200) + '...' :
-                        queja.descripcion }}
-                    </div>
-
-                    <div class="complaint-footer">
-                        <div class="meta-item"><span>📍</span><span>{{ queja.ubicacion_direccion }}</span></div>
-                        <div class="priority-badge" [ngClass]="'priority-' + queja.prioridad.toLowerCase()">
-                            {{ queja.prioridad }}
+                        <div class="comentarios-list" *ngIf="queja.showComentarios">
+                            <div *ngIf="cargandoComentarios[queja.id]" class="comentarios-loading">
+                                Cargando comentarios...
+                            </div>
+                            <div *ngIf="!cargandoComentarios[queja.id] && quejasComentarios[queja.id]?.length === 0" class="comentarios-empty">
+                                No hay comentarios del administrador.
+                            </div>
+                            <div class="comentario-item" *ngFor="let comentario of quejasComentarios[queja.id]">
+                                <div class="comentario-meta">
+                                    <span class="comentario-admin">{{ comentario.admin_nombre || 'Admin' }}</span>
+                                    <span class="comentario-fecha">{{ comentario.fecha_cambio | date:'dd/MM/yyyy HH:mm' }}</span>
+                                    <span class="comentario-estatus">(estatus: {{ comentario.estatus_nuevo }})</span>
+                                </div>
+                                <div class="comentario-text">{{ comentario.comentario }}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -312,7 +277,127 @@
                 <div class="empty-state-icon">📭</div>
                 <h3>No tienes reportes aún</h3>
                 <p>Crea tu primera queja o sugerencia para mejorar tu comunidad</p>
-                <button *ngIf="!isAdmin" class="btn-new-complaint" (click)="toggleNewQuejaForm()">➕ Crear Primera Queja</button>
+                <button class="btn-new-complaint" (click)="toggleNewQuejaForm()">➕ Crear Primera Queja</button>
+            </div>
+
+            <!-- Loading -->
+            <div *ngIf="loading" class="loading-state">
+                <p>Cargando tus reportes...</p>
+            </div>
+        </div>
+
+        <!-- Admin View: All Complaints -->
+        <div *ngIf="isAdmin" class="complaints-section">
+            <h2>🛡️ Todas las Quejas (Administrador)</h2>
+            <div class="complaints-grid" *ngIf="allQuejas.length > 0">
+                <div class="complaint-card" *ngFor="let queja of allQuejas">
+                    <div class="complaint-header">
+                        <div class="complaint-title">{{ queja.titulo }}</div>
+                        <span class="status-badge" [ngClass]="getStatusClass(queja.estatus)">{{ queja.estatus }}</span>
+                    </div>
+
+                    <div class="complaint-meta">
+                        <div class="meta-item"><span>👤</span><span>{{ queja.usuario_nombre }}</span></div>
+                        <div class="meta-item"><span>📁</span><span>{{ queja.categoria }}</span></div>
+                        <div class="meta-item"><span>📅</span><span>{{ queja.fecha_creacion | date:'dd/MM/yyyy' }}</span></div>
+                        <div class="meta-item"><span>🏷️</span><span>{{ queja.tipo }}</span></div>
+                        <div class="meta-item" *ngIf="queja.total_archivos > 0"><span>📎</span><span>{{ queja.total_archivos }} archivos</span></div>
+                    </div>
+
+                    <div class="complaint-description">
+                        {{ queja.descripcion.length > 200 ? (queja.descripcion | slice:0:200) + '...' : queja.descripcion }}
+                    </div>
+
+                    <div class="complaint-footer">
+                        <div class="meta-item"><span>📍</span><span>{{ queja.ubicacion_direccion }}</span></div>
+                        <div class="priority-badge" [ngClass]="'priority-' + queja.prioridad.toLowerCase()">
+                            {{ queja.prioridad }}
+                        </div>
+                    </div>
+
+                    <!-- Archivos -->
+                    <div class="archivos-section" *ngIf="queja.total_archivos > 0">
+                        <button class="btn-toggle-archivos" (click)="toggleArchivosPorQueja(queja)">
+                            {{ queja.showArchivos ? '📁 Ocultar archivos' : '📎 Ver archivos (' + queja.total_archivos + ')' }}
+                        </button>
+
+                        <div class="archivos-list" *ngIf="queja.showArchivos && quejasArchivos[queja.id]">
+                            <div class="archivo-item" *ngFor="let archivo of quejasArchivos[queja.id]">
+                                <!-- Imagen -->
+                                <div *ngIf="archivo.tipo_archivo === 'imagen'" class="archivo-imagen">
+                                    <img [src]="archivo.ruta_archivo" 
+                                         [alt]="archivo.nombre_original"
+                                         class="archivo-preview"
+                                         (click)="openImage(archivo)">
+                                    <div class="archivo-info">
+                                        <span class="archivo-nombre">{{ archivo.nombre_original }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- PDF -->
+                                <div *ngIf="archivo.tipo_archivo === 'pdf'" class="archivo-pdf">
+                                    <div class="pdf-icon">📄</div>
+                                    <div class="archivo-info">
+                                        <span class="archivo-nombre">{{ archivo.nombre_original }}</span>
+                                        <a [href]="archivo.ruta_archivo" target="_blank" class="btn-open-pdf">
+                                            🔗 Abrir
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <!-- Otros -->
+                                <div *ngIf="archivo.tipo_archivo === 'otro'" class="archivo-otro">
+                                    <div class="otro-icon">📎</div>
+                                    <div class="archivo-info">
+                                        <span class="archivo-nombre">{{ archivo.nombre_original }}</span>
+                                        <a [href]="archivo.ruta_archivo" download class="btn-download">
+                                            ⬇️ Descargar
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comentarios -->
+                    <div class="comentarios-section">
+                        <button class="btn-toggle-comentarios" (click)="toggleComentariosPorQueja(queja)">
+                            {{ queja.showComentarios ? '💬 Ocultar comentarios' : '💬 Ver comentarios' }}
+                        </button>
+
+                        <div class="comentarios-list" *ngIf="queja.showComentarios">
+                            <div *ngIf="cargandoComentarios[queja.id]" class="comentarios-loading">
+                                Cargando comentarios...
+                            </div>
+                            <div *ngIf="!cargandoComentarios[queja.id] && quejasComentarios[queja.id]?.length === 0" class="comentarios-empty">
+                                No hay comentarios del administrador.
+                            </div>
+                            <div class="comentario-item" *ngFor="let comentario of quejasComentarios[queja.id]">
+                                <div class="comentario-meta">
+                                    <span class="comentario-admin">{{ comentario.admin_nombre || 'Admin' }}</span>
+                                    <span class="comentario-fecha">{{ comentario.fecha_cambio | date:'dd/MM/yyyy HH:mm' }}</span>
+                                    <span class="comentario-estatus">(estatus: {{ comentario.estatus_nuevo }})</span>
+                                </div>
+                                <div class="comentario-text">{{ comentario.comentario }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Admin Actions -->
+                    <div class="admin-actions">
+                        <span class="admin-label">Cambiar a:</span>
+                        <button class="btn-status" [disabled]="updatingQuejaId === queja.id" (click)="actualizarEstatus(queja.id, 'En Proceso')">En Proceso</button>
+                        <button class="btn-status" [disabled]="updatingQuejaId === queja.id" (click)="actualizarEstatus(queja.id, 'Resuelta')">Resuelta</button>
+                        <button class="btn-status btn-rechazada" [disabled]="updatingQuejaId === queja.id" (click)="actualizarEstatus(queja.id, 'Rechazada')">Rechazada</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div *ngIf="allQuejas.length === 0 && !loading" class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <h3>No hay quejas registradas</h3>
+                <p>Aún no se han enviado reportes al sistema.</p>
             </div>
 
             <!-- Loading -->

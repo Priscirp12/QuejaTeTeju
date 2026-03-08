@@ -38,6 +38,8 @@ export class DashboardComponent implements OnInit {
   isAdmin = false;
   allQuejas: any[] = [];
   quejasArchivos: { [quejaId: number]: any[] } = {}; // Cache de archivos por queja
+  quejasComentarios: { [quejaId: number]: any[] } = {}; // Cache de comentarios por queja
+  cargandoComentarios: { [quejaId: number]: boolean } = {}; // Indicador de carga de comentarios
 
   // Estado de carga
   loading = true;
@@ -164,6 +166,32 @@ export class DashboardComponent implements OnInit {
     if (queja.showArchivos) {
       this.loadArchivosPorQueja(queja.id);
     }
+  }
+
+  toggleComentariosPorQueja(queja: any) {
+    queja.showComentarios = !queja.showComentarios;
+    if (queja.showComentarios) {
+      this.loadComentariosPorQueja(queja.id);
+    }
+  }
+
+  loadComentariosPorQueja(quejaId: number) {
+    this.cargandoComentarios[quejaId] = true;
+    this.quejasService.getComentarios(quejaId).subscribe({
+      next: (res: any) => {
+        if (res.success && Array.isArray(res.comentarios)) {
+          this.quejasComentarios[quejaId] = res.comentarios;
+        } else {
+          this.quejasComentarios[quejaId] = [];
+        }
+        this.cargandoComentarios[quejaId] = false;
+      },
+      error: (err) => {
+        console.error('Error loading comments for complaint:', err);
+        this.quejasComentarios[quejaId] = [];
+        this.cargandoComentarios[quejaId] = false;
+      }
+    });
   }
 
   toggleNewQuejaForm() {
