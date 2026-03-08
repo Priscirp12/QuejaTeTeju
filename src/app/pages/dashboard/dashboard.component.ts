@@ -1,8 +1,9 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { IonicModule, AlertController, ToastController } from '@ionic/angular';
+import { Subject, takeUntil } from 'rxjs';
 import { AuthService, User } from '../../services/auth.service';
 import { QuejasService, Queja, Estadisticas } from '../../services/quejas.service';
 
@@ -13,7 +14,7 @@ import { QuejasService, Queja, Estadisticas } from '../../services/quejas.servic
   standalone: true,
   imports: [CommonModule, IonicModule, FormsModule, ReactiveFormsModule, RouterModule]
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
   quejas: Queja[] = [];
   estadisticas: Estadisticas = {
@@ -23,6 +24,8 @@ export class DashboardComponent implements OnInit {
     resueltas: 0,
     rechazadas: 0
   };
+
+  private destroy$ = new Subject<void>();
 
   // Filtros
   filterStatus = '';
@@ -62,8 +65,19 @@ export class DashboardComponent implements OnInit {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
   ngOnInit() {
-    this.currentUser = this.authService.getCurrentUser();
-    this.isAdmin = this.authService.isAdmin();
+    // Mantener el usuario actualizado cuando cambia (login/logout)
+    this.authService.currentUser.pipe(takeUntil(this.destroy$)).subscribe(user => {
+      this.currentUser = user;
+      this.isAdmin = user?.rol === 'admin';
+
+      // Limpia datos antiguos al cambiar de usuario
+      this.quejas = [];
+      this.allQuejas = [];
+
+      if (user) {
+        this.loadData();
+      }
+    });
 
     this.quejaForm = this.fb.group({
       titulo: ['', [Validators.required, Validators.minLength(5)]],
@@ -350,6 +364,11 @@ export class DashboardComponent implements OnInit {
       'Rechazada': 'status-rechazada'
     };
     return statusMap[estatus] || '';
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   async logout() {
