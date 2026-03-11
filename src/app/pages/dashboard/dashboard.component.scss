@@ -32,11 +32,18 @@
 }
 
 .logo {
-  font-size: 1.5rem;
-  font-weight: bold;
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.logo img,
+.logo .app-logo {
+  max-height: 80px;
+  max-width: 220px;
+  height: auto;
+  width: auto;
+  object-fit: contain;
 }
 
 .user-menu {
@@ -444,6 +451,10 @@
   margin-bottom: 1rem;
   font-size: 0.9rem;
   color: #666;
+}
+
+span{
+  color:#000
 }
 
 .meta-item {
